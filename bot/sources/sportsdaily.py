@@ -31,6 +31,22 @@ _STAMP_IN_SPAN = re.compile(
 )
 
 _CONCURRENCY = 6
+_LISTING_RETRIES = 3
+
+
+async def _get_retry(client: httpx.AsyncClient, url: str) -> httpx.Response:
+    """Повтор при обрыве TLS/сокета (часто на длинной выдаче)."""
+    last: BaseException | None = None
+    for attempt in range(_LISTING_RETRIES):
+        try:
+            r = await client.get(url)
+            r.raise_for_status()
+            return r
+        except (httpx.ReadError, httpx.RemoteProtocolError, httpx.ConnectTimeout) as e:
+            last = e
+            await asyncio.sleep(0.5 * (attempt + 1))
+    assert last is not None
+    raise last
 
 
 def _lastmod_calendar_date(s: str) -> date | None:
@@ -206,8 +222,7 @@ async def fetch_exclusive_items(
     by_url: dict[str, ExclusiveItem] = {}
 
     try:
-        lr = await client.get(LISTING_URL)
-        lr.raise_for_status()
+        lr = await _get_retry(client, LISTING_URL)
         for it in _items_from_eksklyuziv_listing(lr.text):
             by_url[it.url] = it
     except Exception:

@@ -1,5 +1,9 @@
 .env
+bot_run.log
 all-python-dump.txt
 __pycache__/
 *.pyc
 .venv/
+
+# Локальные пробы парсеров (не в образ)
+_sovsport*.py

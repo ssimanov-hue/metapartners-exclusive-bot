@@ -21,10 +21,12 @@ def default_headers() -> dict[str, str]:
 
 
 def create_client(**kwargs: Any) -> httpx.AsyncClient:
+    # Сбор идёт по нескольким сайтам с десятками запросов подряд; 30s часто рвёт
+    # выдачу на медленных сетях/Fly — тогда в отчёте пусто или только «Нет ответа».
     kw: dict[str, Any] = {
         "headers": default_headers(),
         "follow_redirects": True,
-        "timeout": httpx.Timeout(30.0, connect=15.0),
+        "timeout": httpx.Timeout(120.0, connect=20.0),
     }
     kw.update(kwargs)
     return httpx.AsyncClient(**kw)

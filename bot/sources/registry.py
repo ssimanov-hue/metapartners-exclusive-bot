@@ -4,9 +4,10 @@ import asyncio
 import logging
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime
 
 import httpx
+from zoneinfo import ZoneInfo
 
 from bot.sources import euro_football, odds, rt_rss, sovsport, sportsdaily, vseprosport
 from bot.sources.http_utils import create_client
@@ -54,29 +55,34 @@ async def fetch_all_sources(
 
     own_client = client is None
     client = client or create_client()
-    rt_day = target_day or date.today()
-    results: list[SourceFetchResult] = []
+    # Как и /today в боте — календарный день по Москве (на UTC-серверах date.today() смещает сутки).
+    rt_day = target_day or datetime.now(ZoneInfo("Europe/Moscow")).date()
+
+    async def run_one(sid: str, fn: SourceFn) -> SourceFetchResult:
+        try:
+            if sid in (
+                "rt_rss",
+                "sportsdaily",
+                "odds",
+                "vseprosport",
+                "euro_football",
+            ):
+                items = await fn(client, target_day=rt_day)
+            else:
+                items = await fn(client)
+            return SourceFetchResult(source_id=sid, items=items)
+        except Exception as e:
+            logger.exception("Source %s failed", sid)
+            return SourceFetchResult(source_id=sid, error=str(e))
+
     try:
-        for sid, fn in SOURCE_REGISTRY:
-            try:
-                if sid in (
-                    "rt_rss",
-                    "sportsdaily",
-                    "odds",
-                    "vseprosport",
-                    "euro_football",
-                ):
-                    items = await fn(client, target_day=rt_day)
-                else:
-                    items = await fn(client)
-                results.append(SourceFetchResult(source_id=sid, items=items))
-            except Exception as e:
-                logger.exception("Source %s failed", sid)
-                results.append(SourceFetchResult(source_id=sid, error=str(e)))
+        results = await asyncio.gather(
+            *[run_one(sid, fn) for sid, fn in SOURCE_REGISTRY]
+        )
     finally:
         if own_client:
             await client.aclose()
-    return results
+    return list(results)
 
 
 def _main_sync() -> None:

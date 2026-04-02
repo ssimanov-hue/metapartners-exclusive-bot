@@ -1,0 +1,4 @@
+# https://docs.railway.com/deploy/dockerfiles
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"

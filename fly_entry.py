@@ -1,7 +1,7 @@
 """
-Запуск на Fly.io: слушаем PORT (health), затем тот же цикл событий — Telegram polling.
+Облако (Fly.io, Railway): слушаем PORT (health «/»), затем тот же цикл — Telegram polling.
 
-Локально: `python -m bot` по-прежнему основной вход.
+Локально основной вход: `python -m bot`.
 """
 
 from __future__ import annotations

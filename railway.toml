@@ -2,6 +2,9 @@
 # Если снова «Dockerfile does not exist»: в UI сервиса очистите Root Directory (должен быть корень репо)
 # или в Variables задайте RAILWAY_DOCKERFILE_PATH=Dockerfile
 # https://docs.railway.com/deploy/dockerfiles
+# Если в UI задан Start Command (например python -m bot), он перебивает CMD образа.
+# fly_entry.py = HTTP на $PORT (health «/») + тот же polling, что и python -m bot.
 
 [deploy]
 healthcheckPath = "/"
+startCommand = "python fly_entry.py"

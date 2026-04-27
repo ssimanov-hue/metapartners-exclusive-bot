@@ -1,0 +1,12 @@
+# Прод на EC2: polling + health на PORT (только localhost — SG не открывать).
+# На сервере: скопировать .env из Railway, chmod 600 .env, затем: docker compose up -d --build
+services:
+  bot:
+    build: .
+    container_name: metapartners-exclusive-bot
+    env_file: .env
+    restart: unless-stopped
+    environment:
+      PORT: "8080"
+    ports:
+      - "127.0.0.1:8080:8080"

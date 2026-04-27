@@ -39,6 +39,12 @@ python -m bot --smoke-sources
 
 Файл `.env` не коммитить.
 
+## Docker / EC2
+
+Образ: `Dockerfile` (`python:3.12-slim-bookworm`), вход облака: [`fly_entry.py`](fly_entry.py) (health `http://0.0.0.0:$PORT/`, polling). Локально: `docker compose up --build` (нужен `.env`).
+
+Пошаговый перенос с Railway на AWS: [docs/deploy-ec2.md](docs/deploy-ec2.md).
+
 ## Если «No module named bot»
 
 Текущая директория должна быть **родительской** для пакета `bot`. Не запускайте `python -m bot` из корня всего workspace — только из этой папки или через `run.cmd`.
